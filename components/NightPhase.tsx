@@ -34,7 +34,7 @@ export default function NightPhase() {
       const logEntry = {
         id: generateId(),
         round,
-        phase: 'night',
+        phase: 'night' as const,
         action: `${eliminatedPlayer?.name} was eliminated during the night.`,
         timestamp: Date.now(),
       };
@@ -49,7 +49,7 @@ export default function NightPhase() {
         const gameEndLogEntry = {
           id: generateId(),
           round: round,
-          phase: 'night',
+          phase: 'night' as const,
           action: `Game Over! ${gameStatus.winner === 'town' ? 'Town' : 'Mafia'} wins!`,
           timestamp: Date.now(),
         };
@@ -84,21 +84,21 @@ export default function NightPhase() {
       const logEntry = {
         id: generateId(),
         round,
-        phase: 'night',
-        action: 'The Sheriff conducted an investigation.',
+        phase: 'night' as const,
+        action: `Sheriff investigated ${investigatedPlayer?.name} and found ${isMafiaRole ? 'a Mafia member' : 'an innocent citizen'}.`,
         timestamp: Date.now(),
       };
-
-      updateGameState(prev => ({
-        ...prev,
-        phase: 'day',
-        gameLog: [...prev.gameLog, logEntry],
-        nightAction: { ...prev.nightAction, sheriff: selectedPlayer }
-      }));
 
       setIsMafia(isMafiaRole);
       setInvestigatedPlayerName(investigatedPlayer?.name || '');
       setShowInvestigationResult(true);
+
+      // Add log entry but don't change phase yet
+      updateGameState(prev => ({
+        ...prev,
+        gameLog: [...prev.gameLog, logEntry],
+        nightAction: { ...prev.nightAction, sheriff: selectedPlayer }
+      }));
     }
   };
 
@@ -109,6 +109,11 @@ export default function NightPhase() {
   const handleCloseInvestigation = () => {
     setShowInvestigationResult(false);
     setSelectedPlayer(null);
+    // Move to day phase after closing the investigation result
+    updateGameState(prev => ({
+      ...prev,
+      phase: 'day'
+    }));
   };
 
   return (
@@ -116,12 +121,12 @@ export default function NightPhase() {
       {/* Investigation Result Modal */}
       {showInvestigationResult && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className={`bg-white rounded-lg shadow-lg max-w-md w-full p-6 ${isMafia ? 'border-2 border-red-500' : 'border-2 border-green-500'}`}>
+          <div className={`bg-white rounded-lg shadow-lg max-w-md w-full p-6 transform transition-all duration-200 ease-in-out ${isMafia ? 'border-2 border-red-500' : 'border-2 border-green-500'}`}>
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold">Investigation Result</h3>
               <button 
                 onClick={handleCloseInvestigation}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-700 transition-colors duration-150"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -129,19 +134,19 @@ export default function NightPhase() {
             
             <div className="flex items-center justify-center p-4 mb-4">
               {isMafia ? (
-                <div className="bg-red-100 text-red-800 rounded-lg p-4 flex items-center">
-                  <AlertTriangle className="h-8 w-8 mr-3 text-red-600" />
+                <div className="bg-red-100 text-red-800 rounded-lg p-4 flex items-center transform transition-all duration-200 hover:scale-105">
+                  <AlertTriangle className="h-8 w-8 mr-3 text-red-600 animate-pulse" />
                   <div>
-                    <p className="font-bold text-lg">{investigatedPlayerName} is a Mafia member!</p>
-                    <p className="text-sm">This player is part of the Mafia team.</p>
+                    <p className="font-bold text-lg mb-1">{investigatedPlayerName} is a Mafia member!</p>
+                    <p className="text-sm opacity-75">This player is part of the Mafia team.</p>
                   </div>
                 </div>
               ) : (
-                <div className="bg-green-100 text-green-800 rounded-lg p-4 flex items-center">
-                  <Shield className="h-8 w-8 mr-3 text-green-600" />
+                <div className="bg-green-100 text-green-800 rounded-lg p-4 flex items-center transform transition-all duration-200 hover:scale-105">
+                  <Shield className="h-8 w-8 mr-3 text-green-600 animate-pulse" />
                   <div>
-                    <p className="font-bold text-lg">{investigatedPlayerName} is not a Mafia member.</p>
-                    <p className="text-sm">This player is innocent.</p>
+                    <p className="font-bold text-lg mb-1">{investigatedPlayerName} is not a Mafia member.</p>
+                    <p className="text-sm opacity-75">This player is innocent.</p>
                   </div>
                 </div>
               )}
@@ -150,10 +155,10 @@ export default function NightPhase() {
             <div className="text-center">
               <button
                 onClick={handleCloseInvestigation}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center mx-auto"
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transform transition-all duration-200 hover:scale-105 flex items-center justify-center mx-auto"
               >
-                <Check className="h-5 w-5 mr-1" />
-                Continue
+                <Check className="h-5 w-5 mr-2" />
+                Continue to Day Phase
               </button>
             </div>
           </div>

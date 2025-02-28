@@ -1,17 +1,16 @@
 'use client';
 
 import React from 'react';
-import { GameProvider, useGameContext } from '@/components/GameProvider';
+import { useGameContext } from '@/components/GameProvider';
 import GameSetup from '@/components/GameSetup';
 import NightPhase from '@/components/NightPhase';
 import DayPhase from '@/components/DayPhase';
 import VotingPhase from '@/components/VotingPhase';
-import VotingResults from '@/components/VotingResults';
 import GameResults from '@/components/GameResults';
 import GameHeader from '@/components/GameHeader';
 import GameLog from '@/components/GameLog';
 
-function GameContent() {
+export default function GamePage() {
   const { gameState } = useGameContext();
   const { phase } = gameState;
   
@@ -29,8 +28,7 @@ function GameContent() {
               {phase === 'voting' && <VotingPhase />}
               {phase === 'results' && <GameResults />}
               
-              {/* Show voting results if enabled */}
-              {gameState.showVotingResults && <VotingResults />}
+              {/* Voting results are now shown on a separate page */}
             </div>
             
             {/* Game Log (hide during setup) */}
@@ -43,13 +41,5 @@ function GameContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function GamePage() {
-  return (
-    <GameProvider>
-      <GameContent />
-    </GameProvider>
   );
 }

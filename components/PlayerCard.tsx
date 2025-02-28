@@ -1,6 +1,6 @@
 import React from 'react';
 import { Player } from '@/types/game';
-import { Shield, Gavel, Gun, Crown, User } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 
 interface PlayerCardProps {
   player: Player;
@@ -20,13 +20,13 @@ export default function PlayerCard({
   const getRoleIcon = () => {
     switch (role) {
       case 'sheriff':
-        return <Shield className="h-5 w-5 text-blue-600" />;
+        return <LucideIcons.Shield className="h-5 w-5 text-blue-600" />;
       case 'don':
-        return <Crown className="h-5 w-5 text-red-800" />;
+        return <LucideIcons.Crown className="h-5 w-5 text-red-800" />;
       case 'mafia':
-        return <Gun className="h-5 w-5 text-red-600" />;
+        return <LucideIcons.Skull className="h-5 w-5 text-red-600" />;
       case 'civilian':
-        return <User className="h-5 w-5 text-green-600" />;
+        return <LucideIcons.User className="h-5 w-5 text-green-600" />;
       default:
         return null;
     }

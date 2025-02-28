@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useGameContext } from './GameProvider';
 import PlayerCard from './PlayerCard';
 import { Vote, Check, AlertCircle, ThumbsUp, ThumbsDown } from 'lucide-react';
@@ -6,6 +7,7 @@ import { checkGameEnd, generateId } from '@/utils/helpers';
 
 export default function VotingPhase() {
   const { gameState, updateGameState } = useGameContext();
+  const router = useRouter();
   const { 
     players, 
     votes, 
@@ -53,7 +55,7 @@ export default function VotingPhase() {
     const logEntry = {
       id: generateId(),
       round: gameState.round,
-      phase: 'voting',
+      phase: 'voting' as const,
       action: `${currentVoterPlayer.name} voted for ${votedForPlayer?.name}.`,
       timestamp: Date.now(),
     };
@@ -88,7 +90,7 @@ export default function VotingPhase() {
     const logEntry = {
       id: generateId(),
       round: gameState.round,
-      phase: 'voting',
+      phase: 'voting' as const,
       action: `${currentVoterPlayer.name} voted to ${confirmationVote ? 'exile' : 'keep'} ${targetPlayer?.name}.`,
       timestamp: Date.now(),
     };
@@ -146,7 +148,7 @@ export default function VotingPhase() {
         const logEntry = {
           id: generateId(),
           round: gameState.round,
-          phase: 'voting',
+          phase: 'voting' as const,
           action: `No clear majority. Starting runoff vote between tied players.`,
           timestamp: Date.now(),
         };
@@ -158,7 +160,7 @@ export default function VotingPhase() {
         const tieLogEntry = {
           id: generateId(),
           round: gameState.round,
-          phase: 'voting',
+          phase: 'voting' as const,
           action: `Tied players with ${maxVotes} votes each: ${tiedPlayerNames}`,
           timestamp: Date.now(),
         };
@@ -180,7 +182,7 @@ export default function VotingPhase() {
         const logEntry = {
           id: generateId(),
           round: gameState.round,
-          phase: 'voting',
+          phase: 'voting' as const,
           action: `Still tied after runoff. Starting confirmation vote (exile or keep).`,
           timestamp: Date.now(),
         };
@@ -224,7 +226,7 @@ export default function VotingPhase() {
     const resultLogEntry = {
       id: generateId(),
       round: gameState.round,
-      phase: 'voting',
+      phase: 'voting' as const,
       action: `Confirmation vote result: ${exileVotes} out of ${totalVotes} (${Math.round(percentageExile)}%) voted to exile ${targetPlayer?.name}.`,
       timestamp: Date.now(),
     };
@@ -234,7 +236,7 @@ export default function VotingPhase() {
       const decisionLogEntry = {
         id: generateId(),
         round: gameState.round,
-        phase: 'voting',
+        phase: 'voting' as const,
         action: `The town has decided to exile ${targetPlayer?.name}.`,
         timestamp: Date.now(),
       };
@@ -251,22 +253,28 @@ export default function VotingPhase() {
       const decisionLogEntry = {
         id: generateId(),
         round: gameState.round,
-        phase: 'voting',
+        phase: 'voting' as const,
         action: `Not enough votes to exile ${targetPlayer?.name}. The town continues with no elimination.`,
         timestamp: Date.now(),
       };
       
+      // Update game state and then navigate to voting results page
       updateGameState(prev => ({
         ...prev,
+        phase: 'voting',
         showVotingResults: true,
         votingType: 'normal',
         tiedPlayerIds: [],
         confirmationVotes: confirmationVotes,
         gameLog: [...prev.gameLog, resultLogEntry, decisionLogEntry]
+        // Notice: We're not clearing the votes here anymore
       }));
+      
+      // Redirect to voting results page
+      router.push('/game/voting-results');
     }
   };
-  
+
   const eliminatePlayerAndContinue = (eliminatedId: string, voteCount: number) => {
     // Eliminate player
     const updatedPlayers = players.map(player => {
@@ -275,43 +283,47 @@ export default function VotingPhase() {
       }
       return player;
     });
-    
+  
     // Check if game is over
     const gameStatus = checkGameEnd({
       ...gameState,
       players: updatedPlayers
     });
-    
-    // Add log entry for the completed vote
+  
+    // Add log entries for voting outcome and game end if applicable
     const eliminatedPlayer = players.find(p => p.id === eliminatedId);
-    const logEntry = {
+    const voteLogEntry = {
       id: generateId(),
       round: gameState.round,
-      phase: 'voting',
-      action: `Voting complete. ${eliminatedPlayer?.name} received ${voteCount} votes and was eliminated.`,
+      phase: 'voting' as const,
+      action: `${eliminatedPlayer?.name} was eliminated by town vote with ${voteCount} votes.`,
       timestamp: Date.now(),
     };
-    
+  
+    let gameEndLogEntry = null;
     if (gameStatus.isGameOver) {
-      // Game over
-      updateGameState(prev => ({
-        ...prev,
-        players: updatedPlayers,
-        phase: 'results',
-        showVotingResults: true,
-        gameLog: [...prev.gameLog, logEntry]
-      }));
-    } else {
-      // Show voting results before next round
-      updateGameState(prev => ({
-        ...prev,
-        players: updatedPlayers,
-        showVotingResults: true,
-        votingType: 'normal', // Reset voting type for next round
-        tiedPlayerIds: [],
-        gameLog: [...prev.gameLog, logEntry]
-      }));
+      gameEndLogEntry = {
+        id: generateId(),
+        round: gameState.round,
+        phase: 'voting' as const,
+        action: `Game Over! ${gameStatus.winner === 'town' ? 'Town' : 'Mafia'} wins!`,
+        timestamp: Date.now(),
+      };
     }
+  
+    updateGameState(prev => ({
+      ...prev,
+      players: updatedPlayers,
+      phase: gameStatus.isGameOver ? 'results' : 'voting',
+      showVotingResults: true,
+      votingType: 'normal',
+      tiedPlayerIds: [],
+      gameLog: [...prev.gameLog, voteLogEntry, ...(gameEndLogEntry ? [gameEndLogEntry] : [])]
+      // Notice: We're not clearing the votes here anymore
+    }));
+    
+    // Redirect to voting results page
+    router.push('/game/voting-results');
   };
   
   if (!currentVoterPlayer) return null;
@@ -319,90 +331,104 @@ export default function VotingPhase() {
   return (
     <div className="max-w-xl mx-auto p-4">
       <div className="text-center mb-6">
-        <Vote className="h-8 w-8 mx-auto mb-2 text-purple-600" />
         <h2 className="text-2xl font-bold">
-          {votingType === 'normal' ? 'Voting Phase' : 
-           votingType === 'runoff' ? 'Runoff Voting' : 
+          {votingType === 'normal' ? 'Town Voting' : 
+           votingType === 'runoff' ? 'Runoff Vote' : 
            'Confirmation Vote'}
         </h2>
-        <p className="text-gray-600">
-          {currentVoterPlayer.name}'s turn to vote
-        </p>
+        
+        {votingType === 'normal' && (
+          <p className="text-gray-600">Day {gameState.round}: Who do you suspect?</p>
+        )}
         
         {votingType === 'runoff' && (
-          <p className="mt-2 text-sm text-purple-600">
-            Vote between tied players only
+          <p className="text-gray-600">
+            Tie vote! Runoff between {tiedPlayerIds.map(id => {
+              const player = players.find(p => p.id === id);
+              return player?.name;
+            }).join(' and ')}.
           </p>
         )}
         
         {votingType === 'confirmation' && tiedPlayerIds.length > 0 && (
-          <p className="mt-2 text-sm text-purple-600">
-            Should {players.find(p => p.id === tiedPlayerIds[0])?.name} be exiled? (Requires majority)
+          <p className="text-gray-600">
+            Vote to exile or keep{' '}
+            <span className="font-semibold">
+              {players.find(p => p.id === tiedPlayerIds[0])?.name}
+            </span>
           </p>
         )}
       </div>
       
-      {(votingType === 'normal' || votingType === 'runoff') && (
-        <div className="mb-6">
-          <h3 className="font-semibold mb-2">Choose a player to eliminate:</h3>
-          
-          {/* Self-voting notice */}
-          {selectedPlayer === currentVoterPlayer.id && (
-            <div className="p-3 mb-4 bg-yellow-100 text-yellow-800 rounded-md flex items-center">
-              <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
-              <p>You're voting for yourself! This might draw suspicion or be a strategic move.</p>
-            </div>
+      <div className="mb-6">
+        <div className="text-center text-lg mb-2">
+          <span className="font-bold">{currentVoterPlayer.name}</span>
+          {currentVoterPlayer.role !== 'unknown' && (
+            <span className="text-xs bg-gray-200 rounded-full px-2 py-1 ml-2">
+              {currentVoterPlayer.role}
+            </span>
           )}
-          
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-            {eligiblePlayers.map(player => (
-              <PlayerCard
-                key={player.id}
-                player={player}
-                isSelected={selectedPlayer === player.id}
-                onClick={() => handlePlayerSelect(player.id)}
-              />
-            ))}
-          </div>
         </div>
-      )}
+        
+        <p className="text-center text-gray-600">
+          It's your turn to vote
+        </p>
+      </div>
       
-      {votingType === 'confirmation' && (
+      {votingType === 'confirmation' ? (
         <div className="mb-6">
-          <h3 className="font-semibold mb-4">Vote to exile or keep:</h3>
+          <h3 className="font-semibold mb-3 text-center">
+            Should {players.find(p => p.id === tiedPlayerIds[0])?.name} be exiled?
+          </h3>
           
-          {tiedPlayerIds.length > 0 && (
-            <div className="flex flex-col items-center mb-6">
-              <PlayerCard
-                player={players.find(p => p.id === tiedPlayerIds[0])!}
-                isSelected={false}
-                onClick={() => {}}
-              />
-            </div>
-          )}
-          
-          <div className="flex justify-center gap-4 mt-4">
-            <button 
+          <div className="flex gap-4 justify-center">
+            <button
               onClick={() => handleConfirmationSelect(true)}
-              className={`px-6 py-3 rounded-lg flex items-center justify-center
-                ${confirmationVote === true 
-                  ? 'bg-red-600 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+              className={`px-4 py-3 rounded-lg flex-1 flex items-center justify-center gap-2 ${
+                confirmationVote === true 
+                ? 'bg-red-600 text-white' 
+                : 'bg-gray-100 hover:bg-red-100'
+              }`}
             >
-              <ThumbsDown className="h-5 w-5 mr-2" />
+              <ThumbsDown className="h-5 w-5" />
               Exile
             </button>
             
-            <button 
+            <button
               onClick={() => handleConfirmationSelect(false)}
-              className={`px-6 py-3 rounded-lg flex items-center justify-center
-                ${confirmationVote === false 
-                  ? 'bg-green-600 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+              className={`px-4 py-3 rounded-lg flex-1 flex items-center justify-center gap-2 ${
+                confirmationVote === false 
+                ? 'bg-green-600 text-white' 
+                : 'bg-gray-100 hover:bg-green-100'
+              }`}
             >
-              <ThumbsUp className="h-5 w-5 mr-2" />
+              <ThumbsUp className="h-5 w-5" />
               Keep
             </button>
+          </div>
+        </div>
+      ) : (
+        <div className="mb-6">
+          <h3 className="font-semibold mb-3">Choose a player to vote for:</h3>
+          
+          <div className="grid grid-cols-2 gap-3">
+            {eligiblePlayers
+              .filter(player => player.id !== currentVoterPlayer.id) // Cannot vote for self
+              .map(player => (
+                <button
+                  key={player.id}
+                  onClick={() => handlePlayerSelect(player.id)}
+                  className={`p-2 border rounded-lg ${
+                    selectedPlayer === player.id 
+                    ? 'border-blue-500 bg-blue-50' 
+                    : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="font-medium">{player.name}</div>
+                  {/* Removing role display for other players during voting */}
+                </button>
+              ))
+            }
           </div>
         </div>
       )}
@@ -410,18 +436,19 @@ export default function VotingPhase() {
       <div className="text-center">
         <button
           onClick={handleVote}
-          disabled={(votingType !== 'confirmation' && !selectedPlayer) || 
-                   (votingType === 'confirmation' && confirmationVote === null)}
-          className={`
-            px-6 py-2 rounded-lg text-white flex items-center justify-center mx-auto
-            ${((votingType !== 'confirmation' && !selectedPlayer) || 
-               (votingType === 'confirmation' && confirmationVote === null))
-              ? 'bg-gray-400 cursor-not-allowed' 
-              : 'bg-purple-600 hover:bg-purple-700'}
-          `}
+          disabled={
+            (votingType === 'confirmation' && confirmationVote === null) || 
+            (votingType !== 'confirmation' && !selectedPlayer)
+          }
+          className={`px-6 py-2 rounded-lg flex items-center justify-center mx-auto ${
+            ((votingType === 'confirmation' && confirmationVote !== null) || 
+            (votingType !== 'confirmation' && selectedPlayer)) 
+            ? 'bg-blue-600 text-white hover:bg-blue-700' 
+            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
         >
-          <Check className="h-5 w-5 mr-1" />
-          Confirm Vote
+          <Vote className="h-5 w-5 mr-2" />
+          Submit Vote
         </button>
       </div>
     </div>

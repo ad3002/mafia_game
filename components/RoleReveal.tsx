@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
-import { Shield, Gavel, Gun, Crown, User, EyeOff, Eye } from 'lucide-react';
+import { Shield, Sword, Crown, User, EyeOff } from 'lucide-react';
 import { Player, PlayerRole } from '@/types/game';
+
+interface RoleInfo {
+  icon: JSX.Element;
+  name: string;
+  description: string;
+  color: string;
+}
 
 interface RoleRevealProps {
   player: Player;
@@ -14,7 +21,7 @@ export default function RoleReveal({ player, onContinue }: RoleRevealProps) {
     setRevealed(true);
   };
   
-  const getRoleInfo = (role: PlayerRole) => {
+  const getRoleInfo = (role: PlayerRole): RoleInfo => {
     switch (role) {
       case 'civilian':
         return {
@@ -32,7 +39,7 @@ export default function RoleReveal({ player, onContinue }: RoleRevealProps) {
         };
       case 'mafia':
         return {
-          icon: <Gun className="h-16 w-16 text-red-600" />,
+          icon: <Sword className="h-16 w-16 text-red-600" />,
           name: 'Mafia',
           description: 'Work with other Mafia members to eliminate the town. Each night, you can eliminate one player.',
           color: 'bg-red-100 border-red-200 text-red-800'
@@ -44,9 +51,14 @@ export default function RoleReveal({ player, onContinue }: RoleRevealProps) {
           description: 'You are the leader of the Mafia. Work with your team to eliminate the town.',
           color: 'bg-red-100 border-red-200 text-red-800'
         };
+      default:
+        // This will never happen because we've handled all possible PlayerRole values,
+        // but TypeScript needs this to ensure type safety
+        throw new Error(`Unhandled role case: ${role}`);
     }
   };
   
+  // Since we know getRoleInfo handles all possible PlayerRole values, this is safe
   const roleInfo = getRoleInfo(player.role);
   
   return (

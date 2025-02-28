@@ -1,6 +1,7 @@
 import React from 'react';
 import { useGameContext } from './GameProvider';
 import { Users, Moon, Sun, Vote, Trophy } from 'lucide-react';
+import { GamePhase } from '@/types/game';
 
 export default function GameHeader() {
   const { gameState } = useGameContext();
@@ -45,12 +46,12 @@ export default function GameHeader() {
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <h1 className="text-xl font-bold">Mafia Game</h1>
         
-        {phase !== 'setup' && (
+        {(phase as GamePhase) !== 'setup' && (
           <div className="flex items-center">
             <div className="flex items-center px-3 py-1 bg-gray-100 rounded-full text-sm">
               {getPhaseIcon()}
               <span className="ml-1 font-medium">{getPhaseText()}</span>
-              {phase !== 'setup' && phase !== 'results' && (
+              {(phase as GamePhase) !== 'setup' && (phase as GamePhase) !== 'results' && (
                 <span className="ml-1">Round {round}</span>
               )}
             </div>

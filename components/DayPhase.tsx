@@ -3,6 +3,7 @@ import { useGameContext } from './GameProvider';
 import PlayerCard from './PlayerCard';
 import { Sun } from 'lucide-react';
 import { checkGameEnd, generateId } from '@/utils/helpers';
+import { GamePhase } from '@/types/game';
 
 export default function DayPhase() {
   const { gameState, updateGameState } = useGameContext();
@@ -17,7 +18,7 @@ export default function DayPhase() {
       const gameEndLogEntry = {
         id: generateId(),
         round: round,
-        phase: 'day',
+        phase: 'results' as GamePhase,
         action: `Game Over! ${gameStatus.winner === 'town' ? 'Town' : 'Mafia'} wins!`,
         timestamp: Date.now(),
       };
@@ -48,7 +49,7 @@ export default function DayPhase() {
     const logEntry = {
       id: generateId(),
       round,
-      phase: 'day',
+      phase: 'day' as GamePhase,
       action: 'Day discussion ended. Voting phase started.',
       timestamp: Date.now(),
     };

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useGameContext } from './GameProvider';
 import { assignRoles, getRandomDefaultNames, generateId } from '@/utils/helpers';
 import { PlusCircle, RefreshCw, X } from 'lucide-react';
+import { GamePhase } from '@/types/game';
 
 export default function GameSetup() {
   const { updateGameState } = useGameContext();
@@ -49,7 +50,7 @@ export default function GameSetup() {
       const logEntry = {
         id: generateId(),
         round: 1,
-        phase: 'setup',
+        phase: 'night' as GamePhase,
         action: 'Game started with 10 players.',
         timestamp: Date.now(),
       };

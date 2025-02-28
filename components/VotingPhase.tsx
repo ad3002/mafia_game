@@ -360,20 +360,16 @@ export default function VotingPhase() {
         )}
       </div>
       
-      <div className="mb-6">
-        <div className="text-center text-lg mb-2">
-          <span className="font-bold">{currentVoterPlayer.name}</span>
-          {currentVoterPlayer.role !== 'unknown' && (
-            <span className="text-xs bg-gray-200 rounded-full px-2 py-1 ml-2">
-              {currentVoterPlayer.role}
-            </span>
-          )}
-        </div>
-        
-        <p className="text-center text-gray-600">
-          It's your turn to vote
-        </p>
+      <div className="text-center text-lg mb-2">
+        <span className="font-bold">{currentVoterPlayer.name}</span>
+        <span className="text-xs bg-gray-200 rounded-full px-2 py-1 ml-2">
+          {currentVoterPlayer.role}
+        </span>
       </div>
+        
+      <p className="text-center text-gray-600">
+        It's your turn to vote
+      </p>
       
       {votingType === 'confirmation' ? (
         <div className="mb-6">

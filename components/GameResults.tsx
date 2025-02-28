@@ -4,6 +4,7 @@ import PlayerCard from './PlayerCard';
 import { Trophy, RotateCw, Home } from 'lucide-react';
 import { assignRoles, generateId } from '@/utils/helpers';
 import { useRouter } from 'next/navigation';
+import { GamePhase } from '@/types/game';
 
 export default function GameResults() {
   const { gameState, updateGameState } = useGameContext();
@@ -25,7 +26,7 @@ export default function GameResults() {
     const logEntry = {
       id: generateId(),
       round: 1,
-      phase: 'night',
+      phase: 'night' as GamePhase,
       action: 'New game started with the same players.',
       timestamp: Date.now(),
     };

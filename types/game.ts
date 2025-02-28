@@ -1,4 +1,4 @@
-export type PlayerRole = 'civilian' | 'sheriff' | 'mafia' | 'don';
+export type PlayerRole = 'civilian' | 'sheriff' | 'mafia' | 'don' | 'unknown';
 
 export interface Player {
   id: string;

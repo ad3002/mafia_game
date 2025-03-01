@@ -86,6 +86,37 @@ vercel --prod
 
 # Vercel Deployment Configuration
 
+## Начальная настройка Vercel CLI
+
+1. Установка Vercel CLI глобально:
+```bash
+npm install -g vercel
+```
+
+2. Привязка проекта к Vercel:
+```bash
+vercel link
+```
+
+Процесс привязки включает:
+- Авторизацию через GitHub (если не выполнена ранее)
+- Подтверждение настройки текущей директории проекта
+- Выбор области (scope) для проекта
+- Привязку к существующему проекту или создание нового
+- Создание `.vercel` директории (автоматически добавляется в .gitignore)
+
+Пример успешной привязки:
+```
+Vercel CLI 41.3.0
+> No existing credentials found. Please log in:
+? Log in to Vercel Continue with GitHub
+> Success! GitHub authentication complete for ad3002@gmail.com
+? Set up "~/mafia_game"? yes
+? Which scope should contain your project? ad3002's projects
+? Found project "ad3002s-projects/mafia-game". Link to it? yes
+✅  Linked to ad3002s-projects/mafia-game (created .vercel and added it to .gitignore)
+```
+
 ## Отключение автоматического деплоя
 
 1. Отключение через конфигурацию (уже применено):
@@ -97,6 +128,25 @@ vercel --prod
 - Ручном деплое через интерфейс Vercel
 - Пуше тега с версией (через наш скрипт `npm run deploy`)
 - Использовании Vercel CLI
+
+## GitHub Actions Configuration
+
+После привязки проекта к Vercel с помощью `vercel link`, в директории `.vercel` создается файл `project.json`, 
+который содержит необходимые ID для настройки деплоя через GitHub Actions:
+
+```json
+{
+  "projectId": "...",
+  "orgId": "..."
+}
+```
+
+Для настройки GitHub Actions вам понадобятся:
+- VERCEL_PROJECT_ID: `...`
+- VERCEL_ORG_ID: `...`
+- VERCEL_TOKEN: создается в настройках аккаунта Vercel (Settings -> Tokens)
+
+Эти значения необходимо добавить в секреты GitHub репозитория (Settings -> Secrets and variables -> Actions).
 
 ## Текущая настройка деплоя
 

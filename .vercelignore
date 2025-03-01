@@ -1,0 +1,7 @@
+.git
+.github
+scripts
+docs
+README.md
+.gitignore
+*.log

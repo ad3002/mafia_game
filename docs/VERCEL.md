@@ -83,3 +83,26 @@ vercel --prod
 - [Документация Vercel](https://vercel.com/docs)
 - [Деплой Next.js на Vercel](https://nextjs.org/docs/deployment)
 - [Vercel CLI](https://vercel.com/cli)
+
+# Vercel Deployment Configuration
+
+## Отключение автоматического деплоя
+
+1. Отключение через конфигурацию (уже применено):
+   - В корне проекта создан файл `vercel.json`
+   - Установлен параметр `github.enabled: false`
+   - Это отключает автоматический деплой через GitHub интеграцию
+
+После этого Vercel будет создавать новые деплои только при:
+- Ручном деплое через интерфейс Vercel
+- Пуше тега с версией (через наш скрипт `npm run deploy`)
+- Использовании Vercel CLI
+
+## Текущая настройка деплоя
+
+- Автоматический деплой отключен через:
+  - UI настройки Vercel
+  - Конфигурацию в vercel.json
+- Деплои происходят только при создании git-тегов с префиксом `v*` (например, v1.0.0)
+- Для деплоя используется команда: `npm run deploy`
+- CI/CD настроен через GitHub Actions (`.github/workflows/deploy.yml`)

@@ -11,14 +11,28 @@ if [[ -n $(git status -s) ]]; then
     exit 1
 fi
 
-# Получаем текущую версию из package.json
-current_version=$(node -p "require('./package.json').version")
+# Получаем текущую версию и обновляем package.json с помощью Node.js
+node -e '
+const fs = require("fs");
+const package = require("./package.json");
+const [major, minor, patch] = package.version.split(".").map(Number);
+package.version = `${major}.${minor}.${patch + 1}`;
+fs.writeFileSync("package.json", JSON.stringify(package, null, 2) + "\n");
+'
+
+# Получаем новую версию
+new_version=$(node -p "require('./package.json').version")
+
+# Коммитим изменение версии
+git add package.json
+git commit -m "chore: bump version to $new_version"
 
 # Создаем новый тег
-git tag "v$current_version"
+git tag "v$new_version"
 
-# Пушим тег в репозиторий
-git push origin "v$current_version"
+# Пушим изменения и тег в репозиторий
+git push origin main
+git push origin "v$new_version"
 
-echo "Deployed version v$current_version"
+echo "Deployed version v$new_version"
 echo "GitHub Actions will handle the deployment to Vercel"
